@@ -20,13 +20,10 @@ def get_mcp_servers() -> list[MCPServerHTTP | MCPServerStdio]:
     """获取MCP服务器列表"""
     mcp_servers = []
     if plugin_config.enable_example_mcp_server:
-        example_server_dir = Path(__file__).parent / "example_servers"
-        server_path = example_server_dir / "e2b_mcp_server.py"
         mcp_servers.append(
             MCPServerStdio(
-                command="uv",
-                args=["run", str(server_path)],
-                env={"E2B_API_KEY": plugin_config.e2b_api_key},
+                command="npx",
+                args=["-y", "@pydantic/mcp-run-python", "stdio"],
             )
         )
     if plugin_config.mcp_servers:
