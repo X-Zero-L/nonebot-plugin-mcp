@@ -9,14 +9,13 @@ require("nonebot_plugin_apscheduler")
 from .config import Config
 
 __plugin_meta__ = PluginMetadata(
-    name="名称",
+    name="Nonebot MCP",
     description="描述",
     usage="用法",
     type="application",  # library
     homepage="https://github.com/X-Zero-L/nonebot-plugin-mcp",
     config=Config,
     supported_adapters=inherit_supported_adapters("nonebot_plugin_alconna", "nonebot_plugin_uninfo"),
-    # supported_adapters={"~onebot.v11"}, # 仅 onebot 应取消注释
     extra={"author": "X-Zero-L <zeroeeau@gmail.com>"},
 )
 
