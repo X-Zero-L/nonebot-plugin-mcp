@@ -20,24 +20,31 @@ __plugin_meta__ = PluginMetadata(
 )
 
 from arclet.alconna import Alconna, Args, Arparma, Option, Subcommand
-from nonebot_plugin_alconna import on_alconna
+from nonebot_plugin_alconna import Match, on_alconna
 from nonebot_plugin_alconna.uniseg import UniMessage
 
-pip = on_alconna(
+from . import core
+
+# 无上下文的单任务模式，适合只需要单次交互的场景
+single_task = on_alconna(
     Alconna(
-        "pip",
-        Subcommand(
-            "install",
-            Args["package", str],
-            Option("-r|--requirement", Args["file", str]),
-            Option("-i|--index-url", Args["url", str]),
-        ),
-    )
+        "/mcp_single",
+        Args["prompt", str],
+        Option("--model|-m|--model_name", Args["model", str], default="openai:gpt-4o", help_text ="指定模型"),
+    ),
+    use_cmd_start=True,
+    priority=5,
+    block=True,
+    aliases={"/mcps", "mcp_single", "mcps"},
 )
+allow_model = [
+    "openai:gpt-4o",
+]
 
 
-@pip.handle()
-async def _(result: Arparma):
-    package: str = result.other_args["package"]
-    logger.info(f"installing {package}")
-    await UniMessage.text(package).send()
+@single_task.handle()
+async def handle_single_task(prompt: Match[str], model: Match[str]):
+    if model.result not in allow_model:
+        logger.warning(f"不支持的模型：{model.result}")
+        await single_task.finish("不支持的模型，请使用以下模型之一：\n" + "\n".join(allow_model))
+    await single_task.finish(await core.run(message=prompt.result, model=model.result))
