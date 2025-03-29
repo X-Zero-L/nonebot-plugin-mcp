@@ -22,10 +22,15 @@ __plugin_meta__ = PluginMetadata(
 )
 
 from arclet.alconna import Alconna, Args, Arparma, Option, Subcommand
-from nonebot_plugin_alconna import Match, MsgId, on_alconna
+from nonebot_plugin_alconna import AlconnaMatcher, Match, MsgId, on_alconna
 from nonebot_plugin_alconna.uniseg import UniMessage
 
 from . import core
+
+# 定义允许的模型列表
+ALLOWED_MODELS = [
+    "openai:gpt-4o",
+]
 
 # 无上下文的单任务模式，适合只需要单次交互的场景
 no_history_task = on_alconna(
@@ -37,17 +42,37 @@ no_history_task = on_alconna(
     use_cmd_start=True,
     priority=5,
     block=True,
-    aliases={"/mcps", "mcp_no_history", "mcps"},
+    aliases={"mcps", "mcp_no_history"},
 )
-allow_model = [
-    "openai:gpt-4o",
-]
+
+# 带上下文
+task = on_alconna(
+    Alconna(
+        "/mcp",
+        Args["prompt", str],
+        Option("--model|-m|--model_name", Args["model", str], default="openai:gpt-4o", help_text="指定模型"),
+    ),
+    use_cmd_start=True,
+    priority=5,
+    block=True,
+    aliases={"mcp"},
+)
+
+
+async def process_task(matcher: AlconnaMatcher, prompt: str, model: str, user_id: str, no_history: bool = False):
+    if model not in ALLOWED_MODELS:
+        logger.warning(f"不支持的模型：{model}")
+        await matcher.finish("不支持的模型，请使用以下模型之一：\n" + "\n".join(ALLOWED_MODELS))
+
+    result = await core.run(user_id=user_id, message=prompt, model=model, no_history=no_history)
+    await matcher.finish(result)
 
 
 @no_history_task.handle()
-async def handle_no_history_task(prompt: Match[str], model: Match[str], msg_id: MsgId, session: Uninfo):
-    if model.result not in allow_model:
-        logger.warning(f"不支持的模型：{model.result}")
-        await no_history_task.finish("不支持的模型，请使用以下模型之一：\n" + "\n".join(allow_model))
-    user_id = session.user.id
-    await no_history_task.finish(await core.run(user_id=user_id, message=prompt.result, model=model.result, no_history=True))
+async def handle_no_history_task(prompt: Match[str], model: Match[str], session: Uninfo):
+    await process_task(no_history_task, prompt.result, model.result, session.user.id, no_history=True)
+
+
+@task.handle()
+async def handle_task(prompt: Match[str], model: Match[str], session: Uninfo):
+    await process_task(task, prompt.result, model.result, session.user.id)
