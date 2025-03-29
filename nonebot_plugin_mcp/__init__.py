@@ -28,26 +28,26 @@ from nonebot_plugin_alconna.uniseg import UniMessage
 from . import core
 
 # 无上下文的单任务模式，适合只需要单次交互的场景
-single_task = on_alconna(
+no_history_task = on_alconna(
     Alconna(
-        "/mcp_single",
+        "/mcp_no_history",
         Args["prompt", str],
         Option("--model|-m|--model_name", Args["model", str], default="openai:gpt-4o", help_text="指定模型"),
     ),
     use_cmd_start=True,
     priority=5,
     block=True,
-    aliases={"/mcps", "mcp_single", "mcps"},
+    aliases={"/mcps", "mcp_no_history", "mcps"},
 )
 allow_model = [
     "openai:gpt-4o",
 ]
 
 
-@single_task.handle()
-async def handle_single_task(prompt: Match[str], model: Match[str], msg_id: MsgId, session: Uninfo):
+@no_history_task.handle()
+async def handle_no_history_task(prompt: Match[str], model: Match[str], msg_id: MsgId, session: Uninfo):
     if model.result not in allow_model:
         logger.warning(f"不支持的模型：{model.result}")
-        await single_task.finish("不支持的模型，请使用以下模型之一：\n" + "\n".join(allow_model))
+        await no_history_task.finish("不支持的模型，请使用以下模型之一：\n" + "\n".join(allow_model))
     user_id = session.user.id
-    await single_task.finish(await core.run(user_id=user_id, message=prompt.result, model=model.result, single=True))
+    await no_history_task.finish(await core.run(user_id=user_id, message=prompt.result, model=model.result, no_history=True))

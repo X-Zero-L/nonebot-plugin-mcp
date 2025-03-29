@@ -69,7 +69,7 @@ async def run(
     group_id: str | None = None,
     message: str | None = None,
     model: str | None = None,
-    single: bool = False,
+    no_history: bool = False,
 ) -> UniMessage:
     if not model:
         model = plugin_config.mcp_default_model
@@ -83,6 +83,8 @@ async def run(
     )
 
     async with agent.run_mcp_servers():
-        response = await agent.run(message, message_history=get_user_history(user_id).messages if not single else None)
-        set_user_history(user_id, response.all_messages()) if not single else None
+        response = await agent.run(
+            message, message_history=get_user_history(user_id).messages if not no_history else None
+        )
+        set_user_history(user_id, response.all_messages()) if not no_history else None
         return response.data
