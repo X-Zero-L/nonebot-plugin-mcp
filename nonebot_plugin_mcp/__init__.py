@@ -59,20 +59,26 @@ task = on_alconna(
 )
 
 
-async def process_task(matcher: AlconnaMatcher, prompt: str, model: str, user_id: str, no_history: bool = False):
+async def process_task(
+    matcher: AlconnaMatcher, msg_id: MsgId, prompt: str, model: str, user_id: str, no_history: bool = False
+):
     if model not in ALLOWED_MODELS:
         logger.warning(f"不支持的模型：{model}")
-        await matcher.finish("不支持的模型，请使用以下模型之一：\n" + "\n".join(ALLOWED_MODELS))
+        await matcher.finish(
+            UniMessage(f"不支持的模型，请使用以下模型之一：{', '.join(ALLOWED_MODELS)}").reply(msg_id=msg_id)
+        )
 
     result = await core.run(user_id=user_id, message=prompt, model=model, no_history=no_history)
-    await matcher.finish(result)
+    await matcher.finish(UniMessage(result).reply(msg_id=msg_id))
 
 
 @no_history_task.handle()
-async def handle_no_history_task(prompt: Match[str], model: Match[str], session: Uninfo):
-    await process_task(no_history_task, prompt.result, model.result, session.user.id, no_history=True)
+async def handle_no_history_task(prompt: Match[str], model: Match[str], session: Uninfo, msg_id: MsgId):
+    await process_task(
+        no_history_task, msg_id, prompt.result, model.result, session.user.id, no_history=True, msg_id=msg_id
+    )
 
 
 @task.handle()
-async def handle_task(prompt: Match[str], model: Match[str], session: Uninfo):
-    await process_task(task, prompt.result, model.result, session.user.id)
+async def handle_task(prompt: Match[str], model: Match[str], session: Uninfo, msg_id: MsgId):
+    await process_task(task, msg_id, prompt.result, model.result, session.user.id)
