@@ -1,5 +1,4 @@
 from nonebot import logger, require
-from nonebot.adapters import Bot, Event
 from nonebot.plugin import PluginMetadata, inherit_supported_adapters
 
 require("nonebot_plugin_uninfo")
@@ -70,11 +69,11 @@ async def process_task(
 
 @no_history_task.handle()
 async def handle_no_history_task(
-    bot: Bot, event: Event, prompt: Match[str], model: Match[str], session: Uninfo, msg_id: MsgId
+    prompt: Match[str], model: Match[str], session: Uninfo, msg_id: MsgId
 ):
     await process_task(no_history_task, msg_id, prompt.result, model.result, session.user.id, no_history=True)
 
 
 @task.handle()
-async def handle_task(bot: Bot, event: Event, prompt: Match[str], model: Match[str], session: Uninfo, msg_id: MsgId):
+async def handle_task(prompt: Match[str], model: Match[str], session: Uninfo, msg_id: MsgId):
     await process_task(task, msg_id, prompt.result, model.result, session.user.id)
