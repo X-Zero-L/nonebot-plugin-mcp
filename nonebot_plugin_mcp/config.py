@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 
 class Config(BaseModel):
-    pass
+    mcp_default_model: str = "openai:gpt-4o"  # agent使用的默认模型
 
 
 # 配置加载

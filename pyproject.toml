@@ -1,6 +1,6 @@
 [project]
 name = "nonebot-plugin-mcp"
-version = "0.1.0"
+version = "0.0.1"
 description = "插件描述"
 readme = "README.md"
 authors = [{ name = "X-Zero-L", email = "X-Zero-L@gmail.com" }]
